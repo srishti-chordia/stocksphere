@@ -33,10 +33,31 @@ export function SignupForm() {
       await createUserWithEmailAndPassword(auth, email, password);
       router.push("/dashboard");
     } catch (error: any) {
+      let description = "An unexpected error occurred. Please try again.";
+      switch (error.code) {
+        case 'auth/email-already-in-use':
+          description = "This email address is already in use by another account.";
+          break;
+        case 'auth/invalid-email':
+          description = "The email address you entered is not valid.";
+          break;
+        case 'auth/weak-password':
+          description = "The password is too weak. It must be at least 6 characters long.";
+          break;
+        case 'auth/network-request-failed':
+          description = "A network error occurred. Please check your internet connection.";
+          break;
+        case 'auth/invalid-api-key':
+          description = "Your Firebase API key is invalid. Please check your configuration in `src/lib/firebase.ts`.";
+          break;
+        default:
+          description = `An error occurred: ${error.message}`;
+          break;
+      }
       toast({
         variant: "destructive",
         title: "Signup Failed",
-        description: "This email might already be in use.",
+        description: description,
       });
     } finally {
       setIsLoading(false);

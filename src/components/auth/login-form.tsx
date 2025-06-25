@@ -33,10 +33,30 @@ export function LoginForm() {
       await signInWithEmailAndPassword(auth, email, password);
       router.push("/dashboard");
     } catch (error: any) {
+      let description = "An unexpected error occurred. Please try again.";
+      switch (error.code) {
+        case 'auth/invalid-credential':
+        case 'auth/user-not-found':
+        case 'auth/wrong-password':
+          description = "Invalid email or password. Please check your credentials and try again.";
+          break;
+        case 'auth/invalid-email':
+          description = "The email address you entered is not valid.";
+          break;
+        case 'auth/network-request-failed':
+          description = "A network error occurred. Please check your internet connection.";
+          break;
+        case 'auth/invalid-api-key':
+          description = "Your Firebase API key is invalid. Please check your configuration in `src/lib/firebase.ts`.";
+          break;
+        default:
+          description = `An error occurred: ${error.message}`;
+          break;
+      }
       toast({
         variant: "destructive",
         title: "Login Failed",
-        description: "Please check your email and password.",
+        description: description,
       });
     } finally {
       setIsLoading(false);
