@@ -84,10 +84,11 @@ export function RiskProfileForm() {
         await setDoc(doc(db, "riskProfiles", user.uid), { profile });
         setResultProfile(profile);
     } catch (error: any) {
+        console.error("Error saving risk profile:", error);
         toast({
             variant: "destructive",
             title: "Failed to save profile",
-            description: "An unexpected error occurred.",
+            description: "Could not save your profile. This might be due to network issues or incorrect Firestore security rules.",
         });
     } finally {
         setIsLoading(false);

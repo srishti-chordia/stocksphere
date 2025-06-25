@@ -18,6 +18,7 @@ import PortfolioCompositionChart from "@/components/dashboard/portfolio-composit
 import RiskProfileTips from "@/components/dashboard/risk-profile-tips";
 import { Skeleton } from "@/components/ui/skeleton";
 import PortfolioHistoryChart from "@/components/dashboard/portfolio-history-chart";
+import { useToast } from "@/hooks/use-toast";
 
 const initialStocks: Stock[] = [
   { id: '1', symbol: 'AAPL', shares: 10, purchasePrice: 150.00, purchaseDate: new Date('2023-01-15'), currentPrice: 175.28, sector: 'Technology' },
@@ -30,6 +31,7 @@ const initialStocks: Stock[] = [
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
   
   const [stocks, setStocks] = useState<Stock[]>(initialStocks);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -37,23 +39,39 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!authLoading) {
-      if (!user) {
-        router.replace("/");
-      } else {
-        const fetchRiskProfile = async () => {
-            if (!user.uid) return;
-            const docRef = doc(db, "riskProfiles", user.uid);
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
-                setRiskProfile(docSnap.data().profile);
-            }
-            setLoading(false);
-        };
-        fetchRiskProfile();
-      }
+    if (authLoading) return;
+
+    if (!user) {
+      router.replace("/");
+      return;
     }
-  }, [user, authLoading, router]);
+
+    const fetchRiskProfile = async () => {
+      if (!user.uid) {
+        setLoading(false);
+        return;
+      }
+      try {
+        const docRef = doc(db, "riskProfiles", user.uid);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setRiskProfile(docSnap.data().profile);
+        }
+      } catch (error: any) {
+        console.error("Error fetching risk profile:", error);
+        toast({
+          variant: "destructive",
+          title: "Data Load Error",
+          description:
+            "Failed to load profile data. This could be due to network issues or incorrect Firestore security rules.",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRiskProfile();
+  }, [user, authLoading, router, toast]);
   
   useEffect(() => {
     const interval = setInterval(() => {
