@@ -43,7 +43,7 @@ type FormValues = z.infer<typeof formSchema>;
 interface AddStockDialogProps {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
-  addStock: (stock: Omit<Stock, 'id' | 'currentPrice'>) => void;
+  addStock: (stock: Omit<Stock, 'id' | 'currentPrice' | 'sector'>) => void;
 }
 
 export function AddStockDialog({ isOpen, setIsOpen, addStock }: AddStockDialogProps) {

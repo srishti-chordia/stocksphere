@@ -5,6 +5,7 @@ export type Stock = {
   purchasePrice: number;
   purchaseDate: Date;
   currentPrice: number;
+  sector?: string;
 };
 
 export type PortfolioHistory = {
