@@ -5,9 +5,11 @@ import { Lightbulb, Shield, TrendingUp, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 import Link from "next/link";
+import { Skeleton } from "../ui/skeleton";
 
 interface RiskProfileTipsProps extends React.HTMLAttributes<HTMLDivElement> {
   profile: string | null;
+  loading: boolean;
 }
 
 const tips: { [key: string]: { title: string, description: string, icon: React.ElementType } } = {
@@ -28,7 +30,7 @@ const tips: { [key: string]: { title: string, description: string, icon: React.E
     },
 }
 
-export default function RiskProfileTips({ profile, className }: RiskProfileTipsProps) {
+export default function RiskProfileTips({ profile, loading, className }: RiskProfileTipsProps) {
   const tip = profile ? tips[profile] : null;
 
   return (
@@ -41,7 +43,15 @@ export default function RiskProfileTips({ profile, className }: RiskProfileTipsP
         <CardDescription>Personalized tips based on your risk profile.</CardDescription>
       </CardHeader>
       <CardContent>
-        {tip ? (
+        {loading ? (
+            <div className="flex items-start gap-4">
+                <Skeleton className="h-8 w-8 rounded-full flex-shrink-0" />
+                <div className="space-y-2 flex-1">
+                    <Skeleton className="h-4 w-1/3" />
+                    <Skeleton className="h-4 w-full" />
+                </div>
+            </div>
+        ) : tip ? (
           <div className="flex items-start gap-4">
             <tip.icon className="h-8 w-8 text-primary mt-1 flex-shrink-0" />
             <div>

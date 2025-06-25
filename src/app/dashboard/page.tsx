@@ -16,7 +16,6 @@ import { signOut } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import PortfolioCompositionChart from "@/components/dashboard/portfolio-composition-chart";
 import RiskProfileTips from "@/components/dashboard/risk-profile-tips";
-import { Skeleton } from "@/components/ui/skeleton";
 import PortfolioHistoryChart from "@/components/dashboard/portfolio-history-chart";
 import { useToast } from "@/hooks/use-toast";
 
@@ -36,26 +35,31 @@ export default function DashboardPage() {
   const [stocks, setStocks] = useState<Stock[]>(initialStocks);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [riskProfile, setRiskProfile] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [isProfileLoading, setIsProfileLoading] = useState(true);
 
   useEffect(() => {
     if (authLoading) return;
-
     if (!user) {
       router.replace("/");
+    }
+  }, [user, authLoading, router]);
+  
+  useEffect(() => {
+    if (!user) {
+      setIsProfileLoading(false);
+      setRiskProfile(null);
       return;
     }
 
     const fetchRiskProfile = async () => {
-      if (!user.uid) {
-        setLoading(false);
-        return;
-      }
+      setIsProfileLoading(true);
       try {
         const docRef = doc(db, "riskProfiles", user.uid);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
           setRiskProfile(docSnap.data().profile);
+        } else {
+          setRiskProfile(null);
         }
       } catch (error: any) {
         console.error("Error fetching risk profile:", error);
@@ -66,12 +70,12 @@ export default function DashboardPage() {
             "Failed to load profile data. This could be due to network issues or incorrect Firestore security rules.",
         });
       } finally {
-        setLoading(false);
+        setIsProfileLoading(false);
       }
     };
 
     fetchRiskProfile();
-  }, [user, authLoading, router, toast]);
+  }, [user, toast]);
   
   useEffect(() => {
     const interval = setInterval(() => {
@@ -115,24 +119,6 @@ export default function DashboardPage() {
     return { totalValue, totalGainLoss };
   }, [stocks]);
 
-  if (authLoading || loading) {
-    return (
-        <div className="flex min-h-screen w-full flex-col p-4 sm:p-6 md:p-8">
-            <Skeleton className="h-16 w-full mb-8" />
-            <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
-                <Skeleton className="h-32" />
-                <Skeleton className="h-32" />
-                <Skeleton className="h-32 lg:col-span-2" />
-            </div>
-            <div className="grid gap-4 md:grid-cols-2 md:gap-8 mt-8">
-                <Skeleton className="h-80" />
-                <Skeleton className="h-80" />
-            </div>
-            <Skeleton className="h-96 w-full mt-8" />
-        </div>
-    );
-  }
-
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
        <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
@@ -164,7 +150,7 @@ export default function DashboardPage() {
        <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <PortfolioOverview totalValue={portfolioData.totalValue} totalGainLoss={portfolioData.totalGainLoss} />
-            <RiskProfileTips profile={riskProfile} className="lg:col-span-2" />
+            <RiskProfileTips profile={riskProfile} loading={isProfileLoading} className="lg:col-span-2" />
         </div>
         <div className="grid gap-4 md:grid-cols-2 md:gap-8">
             <PortfolioHistoryChart totalValue={portfolioData.totalValue} />
