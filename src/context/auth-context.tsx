@@ -2,8 +2,9 @@
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { auth, isFirebaseConfigured } from '@/lib/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ConfigErrorBanner } from '@/components/config-error-banner';
 
 interface AuthContextType {
   user: User | null;
@@ -16,8 +17,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // If Firebase is not configured, show a helpful error page and stop.
+  if (!isFirebaseConfigured) {
+    return <ConfigErrorBanner />;
+  }
+
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    // We can safely assume auth is not null here because of the check above.
+    const unsubscribe = onAuthStateChanged(auth!, (user) => {
       setUser(user);
       setLoading(false);
     });
