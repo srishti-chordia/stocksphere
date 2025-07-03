@@ -1,10 +1,12 @@
+
 "use client";
 
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { doc, setDoc } from "firebase/firestore";
+import { auth, db } from "@/lib/firebase";
 import {
   Card,
   CardContent,
@@ -28,9 +30,23 @@ export function SignupForm() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!db) {
+      toast({
+        variant: "destructive",
+        title: "Firebase Error",
+        description: "Firestore is not configured. Please check your .env.local file.",
+      });
+      return;
+    }
     setIsLoading(true);
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      // Create a document for the new user in Firestore
+      await setDoc(doc(db, "users", userCredential.user.uid), {
+        email: userCredential.user.email,
+        createdAt: new Date(),
+        riskProfile: null,
+      });
       router.push("/dashboard");
     } catch (error: any) {
       let description = "An unexpected error occurred. Please try again.";

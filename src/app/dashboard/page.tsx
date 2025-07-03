@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
@@ -52,12 +53,13 @@ export default function DashboardPage() {
     }
 
     const fetchRiskProfile = async () => {
+      if (!db) return;
       setIsProfileLoading(true);
       try {
-        const docRef = doc(db, "riskProfiles", user.uid);
+        const docRef = doc(db, "users", user.uid);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
-          setRiskProfile(docSnap.data().profile);
+          setRiskProfile(docSnap.data()?.riskProfile || null);
         } else {
           setRiskProfile(null);
         }
@@ -66,8 +68,7 @@ export default function DashboardPage() {
         toast({
           variant: "destructive",
           title: "Data Load Error",
-          description:
-            "Failed to load profile data. This could be due to network issues or incorrect Firestore security rules.",
+          description: "Failed to load profile data. This could be due to network issues or incorrect Firestore security rules.",
         });
       } finally {
         setIsProfileLoading(false);
