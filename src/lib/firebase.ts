@@ -12,34 +12,34 @@ const firebaseConfigValues = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
-// Check if all required environment variables are present and have values.
+// Check if the essential Firebase config values are provided.
+// The measurementId is optional, so it is not checked here.
 export const isFirebaseConfigured =
   !!firebaseConfigValues.apiKey &&
   !!firebaseConfigValues.authDomain &&
-  !!firebaseConfigValues.projectId;
+  !!firebaseConfigValues.projectId &&
+  !!firebaseConfigValues.storageBucket &&
+  !!firebaseConfigValues.messagingSenderId &&
+  !!firebaseConfigValues.appId;
 
 let app: FirebaseApp | null = null;
 let auth: Auth | null = null;
 let db: Firestore | null = null;
 
+// Initialize Firebase only if the configuration is complete.
 if (isFirebaseConfigured) {
   try {
     app = !getApps().length ? initializeApp(firebaseConfigValues) : getApp();
     auth = getAuth(app);
     db = getFirestore(app);
   } catch (e) {
-    console.error("Error initializing Firebase. Please check your credentials in .env.local", e);
+    // This catch block is a safety net, but the primary error handling
+    // is the ConfigErrorBanner shown in AuthProvider.
+    console.error(
+      "Firebase initialization failed. This can happen if the values in .env.local are valid but point to a project that doesn't exist or has been deleted.",
+      e
+    );
   }
-} else {
-  console.warn(`
-================================================================================
-FIREBASE CONFIGURATION ERROR
---------------------------------------------------------------------------------
-Firebase environment variables are missing. The app will not be able to
-connect to Firebase. Please provide your credentials in a '.env.local' file
-to enable Firebase functionality. See the browser for more instructions.
-================================================================================
-  `);
 }
 
 export { app, auth, db };
