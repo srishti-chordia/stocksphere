@@ -30,9 +30,24 @@
 ## 📂 Folder Structure
 
 src/
+│
 ├── components/ # Reusable UI components
 ├── context/ # Auth context and provider
 ├── pages/ # Pages like Dashboard, Login, Signup, ViewStocks
 ├── firebase.js # Firebase configuration
 ├── App.jsx # App routes
 └── index.js # Entry point
+
+## Folder Structure
+
+```
+📁 src/
+│
+├── components/ # Reusable UI components
+├── context/ # Auth context and provider
+├── pages/ # Pages like Dashboard, Login, Signup, ViewStocks
+├── firebase.js # Firebase configuration
+├── App.jsx # App routes
+├── index.js #Entry Point
+├── requirements.txt
+└── README.md
