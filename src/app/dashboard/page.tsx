@@ -37,6 +37,8 @@ export default function DashboardPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [riskProfile, setRiskProfile] = useState<string | null>(null);
   const [isProfileLoading, setIsProfileLoading] = useState(true);
+  const [profileError, setProfileError] = useState<string | null>(null);
+
 
   useEffect(() => {
     if (authLoading) return;
@@ -55,20 +57,25 @@ export default function DashboardPage() {
     const fetchRiskProfile = async () => {
       if (!db) return;
       setIsProfileLoading(true);
+      setProfileError(null);
       try {
         const docRef = doc(db, "users", user.uid);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
           setRiskProfile(docSnap.data()?.riskProfile || null);
         } else {
+          // This can happen if the user was created before we started creating user docs on signup.
+          // It's not an error, they just need to take the quiz.
           setRiskProfile(null);
         }
       } catch (error: any) {
         console.error("Error fetching risk profile:", error);
+        const description = "Failed to load profile data. This is often caused by incorrect Firestore security rules. Please ensure authenticated users can read from the 'users' collection.";
+        setProfileError(description);
         toast({
           variant: "destructive",
           title: "Data Load Error",
-          description: "Failed to load profile data. This could be due to network issues or incorrect Firestore security rules.",
+          description: description,
         });
       } finally {
         setIsProfileLoading(false);
@@ -151,7 +158,7 @@ export default function DashboardPage() {
        <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <PortfolioOverview totalValue={portfolioData.totalValue} totalGainLoss={portfolioData.totalGainLoss} />
-            <RiskProfileTips profile={riskProfile} loading={isProfileLoading} className="lg:col-span-2" />
+            <RiskProfileTips profile={riskProfile} loading={isProfileLoading} error={profileError} className="lg:col-span-2" />
         </div>
         <div className="grid gap-4 md:grid-cols-2 md:gap-8">
             <PortfolioHistoryChart totalValue={portfolioData.totalValue} />

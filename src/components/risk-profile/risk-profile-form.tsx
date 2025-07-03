@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,6 +37,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
+
 
 const formSchema = z.object({
   age: z.string({ required_error: "Please select an age group." }),
@@ -54,6 +56,7 @@ export function RiskProfileForm() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [resultProfile, setResultProfile] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -85,6 +88,7 @@ export function RiskProfileForm() {
   };
 
   async function onSubmit(values: FormValues) {
+    setError(null);
     if (!user || !db) {
       toast({
         variant: "destructive",
@@ -100,10 +104,12 @@ export function RiskProfileForm() {
       setResultProfile(profile);
     } catch (error: any) {
       console.error("Error saving risk profile:", error);
+      const description = "Could not save your profile. This is often due to incorrect Firestore security rules. Please check your Firebase console and ensure logged-in users are allowed to write to the 'users' collection.";
+      setError(description);
       toast({
         variant: "destructive",
         title: "Failed to save profile",
-        description: "Could not save your profile. This might be due to network issues or incorrect Firestore security rules.",
+        description: description,
       });
     } finally {
       setIsLoading(false);
@@ -252,6 +258,14 @@ export function RiskProfileForm() {
               </FormItem>
             )}
           />
+
+          {error && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Save Error</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
 
           <Button type="submit" disabled={isLoading} className="w-full text-lg py-6">
             {isLoading ? <Loader2 className="animate-spin" /> : "Calculate My Profile"}
